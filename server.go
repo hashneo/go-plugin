@@ -530,6 +530,10 @@ func serverListener(unixSocketCfg UnixSocketConfig) (net.Listener, error) {
 		return serverListener_tcp()
 	}
 
+	if os.Getenv("PLUGIN_TRANSPORT") == "tcp" {
+		return serverListener_tcp()
+	}
+
 	return serverListener_unix(unixSocketCfg)
 }
 
