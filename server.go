@@ -569,7 +569,14 @@ func serverListener_tcp() (net.Listener, error) {
 	}
 
 	for port := minPort; port <= maxPort; port++ {
-		address := fmt.Sprintf("127.0.0.1:%d", port)
+
+		bindAddress := os.Getenv("PLUGIN_BIND_ADDRESS")
+
+		if bindAddress == "" {
+			bindAddress = "127.0.0.1"
+		}
+
+		address := fmt.Sprintf("%s:%d", bindAddress, port)
 		listener, err := net.Listen("tcp", address)
 		if err == nil {
 			return listener, nil
