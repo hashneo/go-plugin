@@ -513,25 +513,28 @@ func (c *Client) Kill() {
 	hostSocketDir := c.unixSocketCfg.socketDir
 	c.l.Unlock()
 
-	// If there is no runner or ID, there is nothing to kill.
-	if runner == nil || runner.ID() == "" {
-		return
-	}
-
-	defer func() {
-		// Wait for the all client goroutines to finish.
-		c.clientWaitGroup.Wait()
-
-		if hostSocketDir != "" {
-			os.RemoveAll(hostSocketDir)
+	if c.config.External == nil {
+		// If there is no runner or ID, there is nothing to kill.
+		if runner == nil || runner.ID() == "" {
+			return
 		}
 
-		// Make sure there is no reference to the old process after it has been
-		// killed.
-		c.l.Lock()
-		c.runner = nil
-		c.l.Unlock()
-	}()
+		defer func() {
+			// Wait for the all client goroutines to finish.
+			c.clientWaitGroup.Wait()
+
+			if hostSocketDir != "" {
+				os.RemoveAll(hostSocketDir)
+			}
+
+			// Make sure there is no reference to the old process after it has been
+			// killed.
+			c.l.Lock()
+			c.runner = nil
+			c.l.Unlock()
+		}()
+
+	}
 
 	// We need to check for address here. It is possible that the plugin
 	// started (process != nil) but has no address (addr == nil) if the
@@ -570,10 +573,12 @@ func (c *Client) Kill() {
 		}
 	}
 
-	// If graceful exiting failed, just kill it
-	c.logger.Warn("plugin failed to exit gracefully")
-	if err := runner.Kill(context.Background()); err != nil {
-		c.logger.Debug("error killing plugin", "error", err)
+	if runner != nil {
+		// If graceful exiting failed, just kill it
+		c.logger.Warn("plugin failed to exit gracefully")
+		if err := runner.Kill(context.Background()); err != nil {
+			c.logger.Debug("error killing plugin", "error", err)
+		}
 	}
 
 	c.l.Lock()
