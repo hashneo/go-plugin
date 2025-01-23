@@ -520,7 +520,7 @@ serve:
 
 	case <-doneCh:
 		// Hack to keep the server alive
-		if os.Getenv("PLUGIN_MODE") != "standalone" {
+		if os.Getenv("PLUGIN_MODE") == "standalone" {
 			goto serve
 		}
 		// Note that given the documentation of Serve we should probably be
