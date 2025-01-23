@@ -230,6 +230,7 @@ func protocolVersion(opts *ServeConfig) (int, Protocol, PluginSet) {
 //
 // This is the method that plugins should call in their main() functions.
 func Serve(opts *ServeConfig) {
+serve:
 	exitCode := -1
 	// We use this to trigger an `os.Exit` so that we can execute our other
 	// deferred functions. In test mode, we just output the err to stderr
@@ -518,6 +519,10 @@ func Serve(opts *ServeConfig) {
 		<-doneCh
 
 	case <-doneCh:
+		// Hack to keep the server alive
+		if os.Getenv("PLUGIN_MODE") != "standalone" {
+			goto serve
+		}
 		// Note that given the documentation of Serve we should probably be
 		// setting exitCode = 0 and using os.Exit here. That's how it used to
 		// work before extracting this library. However, for years we've done
