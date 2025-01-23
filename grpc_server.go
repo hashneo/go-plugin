@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin/internal/grpcmux"
@@ -152,7 +153,9 @@ func (s *GRPCServer) Config() string {
 }
 
 func (s *GRPCServer) Serve(lis net.Listener) {
-	defer close(s.DoneCh)
+	if os.Getenv("PLUGIN_MODE") != "standalone" {
+		defer close(s.DoneCh)
+	}
 	err := s.server.Serve(lis)
 	if err != nil {
 		s.logger.Error("grpc server", "error", err)
